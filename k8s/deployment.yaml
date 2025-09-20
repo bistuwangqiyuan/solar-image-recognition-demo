@@ -1,0 +1,174 @@
+# Kubernetes部署配置文件
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar-image-recognition
+  labels:
+    app: solar-image-recognition
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: solar-image-recognition
+  template:
+    metadata:
+      labels:
+        app: solar-image-recognition
+    spec:
+      containers:
+      - name: app
+        image: solar-image-recognition:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/src/uploads
+        - name: logs
+          mountPath: /app/src/logs
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: uploads-pvc
+      - name: logs
+        persistentVolumeClaim:
+          claimName: logs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: solar-image-recognition-service
+spec:
+  selector:
+    app: solar-image-recognition
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logs-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: solar-image-recognition-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - host: solar-image-recognition.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: solar-image-recognition-service
+            port:
+              number: 3000

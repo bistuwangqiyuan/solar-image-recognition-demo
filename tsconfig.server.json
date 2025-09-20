@@ -1,0 +1,32 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "noEmit": false,
+    "outDir": "./dist/server",
+    "rootDir": "./src/server",
+    "jsx": "preserve",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/server/*": ["src/server/*"],
+      "@/types/*": ["src/types/*"],
+      "@/utils/*": ["src/utils/*"]
+    }
+  },
+  "include": ["src/server/**/*", "src/types/**/*", "src/utils/**/*"],
+  "exclude": ["src/client/**/*", "node_modules", "dist"]
+}
+

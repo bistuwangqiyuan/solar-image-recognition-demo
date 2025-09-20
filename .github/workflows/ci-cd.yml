@@ -1,0 +1,193 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 代码质量检查
+  quality-check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run linting
+      run: npm run lint
+
+    - name: Run type checking
+      run: npm run type-check
+
+    - name: Run tests
+      run: npm run test:coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+
+  # 构建和测试
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: quality-check
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+
+    - name: Build Docker image
+      run: docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} .
+
+    - name: Test Docker image
+      run: |
+        docker run --rm -d --name test-container -p 3000:3000 ${{ env.IMAGE_NAME }}:${{ github.sha }}
+        sleep 10
+        curl -f http://localhost:3000/api/health
+        docker stop test-container
+
+  # 安全扫描
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # 部署到开发环境
+  deploy-dev:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: github.ref == 'refs/heads/develop'
+    environment: development
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }} .
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}
+
+    - name: Deploy to development
+      run: |
+        echo "Deploying to development environment..."
+        # 这里可以添加实际的部署命令
+        # 例如：kubectl apply -f k8s/deployment.yaml
+
+  # 部署到生产环境
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
+        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # 这里可以添加实际的部署命令
+        # 例如：kubectl apply -f k8s/deployment.yaml
+
+    - name: Health check
+      run: |
+        echo "Performing health check..."
+        # 这里可以添加健康检查命令
+
+  # 性能测试
+  performance-test:
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    if: github.ref == 'refs/heads/develop'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run performance tests
+      run: |
+        # 这里可以添加性能测试命令
+        echo "Running performance tests..."
+
+  # 通知
+  notify:
+    runs-on: ubuntu-latest
+    needs: [deploy-dev, deploy-prod]
+    if: always()
+    steps:
+    - name: Notify deployment status
+      run: |
+        if [ "${{ needs.deploy-dev.result }}" == "success" ] || [ "${{ needs.deploy-prod.result }}" == "success" ]; then
+          echo "Deployment successful!"
+        else
+          echo "Deployment failed!"
+        fi

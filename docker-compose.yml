@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # 主应用服务
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - UPLOAD_MAX_SIZE=10485760
+      - UPLOAD_ALLOWED_TYPES=image/jpeg,image/jpg,image/png,image/webp
+      - LOG_LEVEL=info
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src/uploads:/app/src/uploads
+      - ./src/logs:/app/src/logs
+      - ./src/temp:/app/src/temp
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Redis缓存服务
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.1'
+
+  # Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./src/uploads:/var/www/uploads:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+
+  # 监控服务（可选）
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Grafana仪表板（可选）
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  redis_data:
+  grafana_data:
+
