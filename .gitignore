@@ -139,3 +139,5 @@ dump.rdb
 
 # Backup directories
 backups/
+# Local Netlify folder
+.netlify
