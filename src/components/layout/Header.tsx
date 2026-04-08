@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -11,14 +11,34 @@ import {
   Image as ImageIcon,
   Sun,
   Moon,
-  Monitor
+  Monitor,
+  Github,
+  Download,
+  ExternalLink,
+  Code2,
+  ChevronDown,
 } from 'lucide-react';
 import { AIModelStatusIndicator } from '@/contexts/AIModelContext';
 
+const GITHUB_REPO = 'https://github.com/bistuwangqiyuan/solar-image-recognition-demo';
+const GITHUB_ZIP = `${GITHUB_REPO}/archive/refs/heads/master.zip`;
+
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isRepoOpen, setIsRepoOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('light');
   const location = useLocation();
+  const repoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (repoRef.current && !repoRef.current.contains(e.target as Node)) {
+        setIsRepoOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navigation = [
     { name: '首页', href: '/', icon: Zap },
@@ -100,6 +120,62 @@ export const Header: React.FC = () => {
               <AIModelStatusIndicator />
             </div>
 
+            {/* 代码仓库 */}
+            <div className="relative" ref={repoRef}>
+              <button
+                onClick={() => setIsRepoOpen(o => !o)}
+                className="flex items-center space-x-1 px-3 py-2 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 rounded-lg transition-all duration-200 text-sm font-medium"
+                title="代码仓库"
+              >
+                <Github className="w-4 h-4" />
+                <span className="hidden lg:inline">代码仓库</span>
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isRepoOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {isRepoOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-secondary-200 overflow-hidden z-50"
+                  >
+                    <div className="px-3 py-2 bg-secondary-50 border-b border-secondary-200">
+                      <p className="text-xs font-semibold text-secondary-500 uppercase tracking-wider">源码与下载</p>
+                    </div>
+                    <div className="py-1">
+                      <a
+                        href={GITHUB_REPO}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsRepoOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-2.5 text-sm text-secondary-700 hover:bg-primary-50 hover:text-primary-700 transition-colors duration-150"
+                      >
+                        <Code2 className="w-4 h-4 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <div className="font-medium">GitHub 仓库</div>
+                          <div className="text-xs text-secondary-400 truncate">查看源码、Star、Fork</div>
+                        </div>
+                        <ExternalLink className="w-3 h-3 flex-shrink-0 text-secondary-400" />
+                      </a>
+                      <a
+                        href={GITHUB_ZIP}
+                        onClick={() => setIsRepoOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-2.5 text-sm text-secondary-700 hover:bg-primary-50 hover:text-primary-700 transition-colors duration-150"
+                      >
+                        <Download className="w-4 h-4 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <div className="font-medium">下载源码 (ZIP)</div>
+                          <div className="text-xs text-secondary-400">包含全部代码和图片</div>
+                        </div>
+                      </a>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* 主题切换 */}
             <button
               onClick={toggleTheme}
@@ -155,6 +231,28 @@ export const Header: React.FC = () => {
                     </Link>
                   );
                 })}
+
+                <div className="border-t border-secondary-200 pt-2 mt-2">
+                  <a
+                    href={GITHUB_REPO}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 transition-all duration-200"
+                  >
+                    <Github className="w-5 h-5" />
+                    <span>GitHub 仓库</span>
+                    <ExternalLink className="w-3 h-3 text-secondary-400" />
+                  </a>
+                  <a
+                    href={GITHUB_ZIP}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 transition-all duration-200"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>下载源码 (ZIP)</span>
+                  </a>
+                </div>
               </nav>
             </motion.div>
           )}
