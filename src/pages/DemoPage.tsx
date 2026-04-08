@@ -15,9 +15,10 @@ import {
   Zap,
   X
 } from 'lucide-react';
-import { DemoData, PanelCondition } from '@/types';
+import { DemoData, PanelCondition, DetectionResult } from '@/types';
 import { demoService } from '@/services/demoService';
-import { analysisService } from '@/services/analysisService';
+import { aiModelService } from '@/services/aiModelService';
+import { AutoPipelineDemo } from '@/components/demo/AutoPipelineDemo';
 import toast from 'react-hot-toast';
 
 export const DemoPage: React.FC = () => {
@@ -28,6 +29,7 @@ export const DemoPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDemo, setSelectedDemo] = useState<DemoData | null>(null);
+  const [demoResults, setDemoResults] = useState<DetectionResult[]>([]);
   const [showDemoModal, setShowDemoModal] = useState(false);
 
   // 加载演示数据
@@ -69,22 +71,29 @@ export const DemoPage: React.FC = () => {
     setFilteredDemos(filtered);
   }, [demos, selectedCategory, searchQuery]);
 
-  // 运行演示
   const runDemo = async (demo: DemoData) => {
     try {
       setIsLoading(true);
-      
-      // 模拟分析过程
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // 显示结果
+      toast('正在使用 MobileNet V2 分析图像...', { icon: '🧠' });
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = demo.imageUrl;
+
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('图片加载失败'));
+      });
+
+      const results = await aiModelService.analyzeImage(img);
+
       setSelectedDemo(demo);
+      setDemoResults(results);
       setShowDemoModal(true);
-      
-      toast.success('演示分析完成！');
+      toast.success(`AI 分析完成，检测到 ${results.length} 个区域`);
     } catch (error) {
       console.error('演示运行失败:', error);
-      toast.error('演示运行失败');
+      toast.error('演示运行失败，请稍后重试');
     } finally {
       setIsLoading(false);
     }
@@ -191,6 +200,9 @@ export const DemoPage: React.FC = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* 全流程自动演示 */}
+          <AutoPipelineDemo />
 
           {/* 搜索和过滤 */}
           <motion.div
@@ -441,23 +453,44 @@ export const DemoPage: React.FC = () => {
                   
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-secondary-900 mb-2">
-                        检测结果
-                      </h3>
+                      <div className="flex items-center space-x-2 mb-3">
+                        <h3 className="text-lg font-semibold text-secondary-900">
+                          AI 实时检测结果
+                        </h3>
+                        <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full font-medium">
+                          MobileNet V2
+                        </span>
+                      </div>
                       <div className="space-y-2">
-                        {selectedDemo.expectedResults.map((result, index) => (
-                          <div key={index} className="p-3 bg-secondary-50 rounded-lg">
+                        {demoResults.map((result, index) => (
+                          <div key={index} className={`p-3 rounded-lg border ${
+                            result.severity === 'high' ? 'bg-error-50 border-error-200' :
+                            result.severity === 'medium' ? 'bg-warning-50 border-warning-200' :
+                            'bg-success-50 border-success-200'
+                          }`}>
                             <div className="flex items-center justify-between mb-1">
                               <span className="font-medium text-secondary-900">
                                 {result.description}
                               </span>
-                              <span className="text-sm text-secondary-600">
+                              <span className={`text-sm font-semibold ${
+                                result.confidence > 0.8 ? 'text-success-600' :
+                                result.confidence > 0.5 ? 'text-warning-600' :
+                                'text-secondary-600'
+                              }`}>
                                 {(result.confidence * 100).toFixed(1)}%
                               </span>
                             </div>
-                            <div className="text-xs text-secondary-500">
-                              位置: ({result.boundingBox.x}, {result.boundingBox.y}) 
-                              尺寸: {result.boundingBox.width}×{result.boundingBox.height}
+                            <div className="flex items-center justify-between text-xs text-secondary-500">
+                              <span>
+                                区域: ({result.boundingBox.x}, {result.boundingBox.y}) {result.boundingBox.width}×{result.boundingBox.height}
+                              </span>
+                              <span className={`px-1.5 py-0.5 rounded text-xs ${
+                                result.severity === 'high' ? 'bg-error-100 text-error-700' :
+                                result.severity === 'medium' ? 'bg-warning-100 text-warning-700' :
+                                'bg-success-100 text-success-700'
+                              }`}>
+                                {result.severity === 'high' ? '高' : result.severity === 'medium' ? '中' : '低'}
+                              </span>
                             </div>
                           </div>
                         ))}

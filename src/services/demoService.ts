@@ -22,7 +22,7 @@ export const demoData: DemoData[] = [
     id: 'demo-2',
     title: '树叶遮挡',
     description: '光伏板表面被树叶遮挡，影响发电效率',
-    imageUrl: '/static/demo/leaves-obstruction.jpg',
+    imageUrl: '/static/demo/leaves-cover.jpg',
     category: PanelCondition.LEAVES,
     expectedResults: [
       {
@@ -45,7 +45,7 @@ export const demoData: DemoData[] = [
     id: 'demo-3',
     title: '灰尘覆盖',
     description: '光伏板表面积累大量灰尘，需要清洁维护',
-    imageUrl: '/static/demo/dust-coverage.jpg',
+    imageUrl: '/static/demo/dust-cover.jpg',
     category: PanelCondition.DUST,
     expectedResults: [
       {

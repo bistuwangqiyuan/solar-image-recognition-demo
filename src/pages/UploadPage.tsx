@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Upload, 
@@ -16,13 +16,16 @@ import { UploadComponent } from '@/components/upload/UploadComponent';
 import { MobileOptimizedUploadComponent, MobileCamera } from '@/components/upload/MobileOptimizedUploadComponent';
 import { ImagePreview } from '@/components/upload/ImagePreview';
 import { CameraCapture } from '@/components/upload/CameraCapture';
+import { ExampleImageSelector } from '@/components/upload/ExampleImageSelector';
 import { uploadService } from '@/services/uploadService';
 import { analysisService } from '@/services/analysisService';
 import { ApiError, ErrorType } from '@/types';
 import { MobileDetector } from '@/utils/mobileAdapter';
+import { SolarSample } from '@/data/solarSamples';
 
 export const UploadPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -31,6 +34,27 @@ export const UploadPage: React.FC = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [deviceDetector] = useState(() => MobileDetector.getInstance());
   const [deviceInfo, setDeviceInfo] = useState(deviceDetector.getDeviceInfo());
+
+  useEffect(() => {
+    const navState = location.state as { exampleImage?: SolarSample } | null;
+    if (navState?.exampleImage) {
+      const sample = navState.exampleImage;
+      (async () => {
+        try {
+          const response = await fetch(sample.imageUrl);
+          const blob = await response.blob();
+          const ext = sample.imageUrl.split('.').pop() || 'png';
+          const mimeType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+          const file = new File([blob], `${sample.id}.${ext}`, { type: mimeType });
+          setUploadedFile(file);
+          toast.success(`已加载示例图片: ${sample.name}`);
+        } catch {
+          toast.error('加载示例图片失败');
+        }
+      })();
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleFileSelect = (file: File) => {
     setUploadedFile(file);
@@ -81,17 +105,24 @@ export const UploadPage: React.FC = () => {
       
       imageElement.onload = async () => {
         try {
-          // 使用客户端AI分析
           const analysisResult = await analysisService.analyzeImageWithClientAI(imageElement);
-          
           toast.success('分析完成！');
-          
-          // 跳转到结果页面
-          navigate(`/results/${uploadResult.imageId}`);
+
+          const imageDataUrl = URL.createObjectURL(uploadedFile);
+          navigate(`/results/${uploadResult.imageId}`, {
+            state: {
+              analysisData: {
+                imageId: uploadResult.imageId,
+                results: analysisResult.results,
+                summary: analysisResult.summary,
+                recommendations: analysisResult.recommendations,
+                createdAt: new Date().toISOString(),
+              },
+              imageUrl: imageDataUrl,
+            },
+          });
         } catch (error) {
           console.error('客户端AI分析失败，尝试服务器端分析:', error);
-          
-          // 如果客户端分析失败，回退到服务器端分析
           try {
             const analysisResult = await analysisService.analyzeImage(uploadResult.imageId);
             toast.success('分析完成！');
@@ -190,6 +221,12 @@ export const UploadPage: React.FC = () => {
                   disabled={isUploading || isAnalyzing}
                 />
               )}
+
+              {/* 示例图片选择 */}
+              <ExampleImageSelector
+                onSelect={handleFileSelect}
+                disabled={isUploading || isAnalyzing}
+              />
 
               {/* 摄像头拍照 */}
               <div className="card">

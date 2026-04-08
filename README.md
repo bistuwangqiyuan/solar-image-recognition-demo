@@ -284,3 +284,4 @@ docker run -p 3000:3000 solar-image-recognition
 
 **光伏图像识别演示网站** - 让AI技术为光伏行业赋能 🚀
 
+

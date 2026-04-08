@@ -92,7 +92,8 @@ dist
 
 # Gatsby files
 .cache/
-public
+public/*
+!public/static/
 
 # Storybook build outputs
 .out

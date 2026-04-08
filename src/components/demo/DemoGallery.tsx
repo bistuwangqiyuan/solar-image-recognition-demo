@@ -42,13 +42,22 @@ export const DemoGallery: React.FC<DemoGalleryProps> = ({
         >
           {/* 图像预览 */}
           <div className="relative overflow-hidden rounded-t-xl">
-            <div className="aspect-video bg-gradient-to-br from-secondary-100 to-secondary-200 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">🔋</span>
-                </div>
-                <p className="text-sm text-secondary-600">演示图像</p>
-              </div>
+            <div className="aspect-video bg-gradient-to-br from-secondary-100 to-secondary-200">
+              <img
+                src={demo.imageUrl}
+                alt={demo.title}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                  target.parentElement!.classList.add('flex', 'items-center', 'justify-center');
+                  const fallback = document.createElement('p');
+                  fallback.className = 'text-sm text-secondary-600';
+                  fallback.textContent = '图片加载失败';
+                  target.parentElement!.appendChild(fallback);
+                }}
+              />
             </div>
             
             {/* 悬停效果 */}
@@ -132,4 +141,5 @@ export const DemoGallery: React.FC<DemoGalleryProps> = ({
     </div>
   );
 };
+
 

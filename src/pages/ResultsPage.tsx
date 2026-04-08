@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -24,6 +24,7 @@ import { AnalysisResult, ApiError, ErrorType } from '@/types';
 export const ResultsPage: React.FC = () => {
   const { imageId } = useParams<{ imageId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -43,61 +44,29 @@ export const ResultsPage: React.FC = () => {
     setError(null);
 
     try {
-      // 这里应该从实际的分析结果中获取数据
-      // 目前使用模拟数据
-      const mockResult: AnalysisResult = {
-        imageId,
-        results: [
-          {
-            category: 'normal' as any,
-            confidence: 0.95,
-            boundingBox: { x: 50, y: 50, width: 200, height: 150 },
-            description: '正常光伏板区域',
-            severity: 'low' as any,
-          },
-          {
-            category: 'leaves' as any,
-            confidence: 0.82,
-            boundingBox: { x: 300, y: 100, width: 80, height: 60 },
-            description: '检测到树叶遮挡',
-            severity: 'medium' as any,
-          },
-          {
-            category: 'dust' as any,
-            confidence: 0.75,
-            boundingBox: { x: 150, y: 200, width: 120, height: 90 },
-            description: '检测到灰尘覆盖',
-            severity: 'medium' as any,
-          },
-        ],
-        summary: {
-          overallStatus: 'warning',
-          totalIssues: 2,
-          processingTime: 3500,
-          confidence: 0.84,
-        },
-        recommendations: [
-          {
-            type: 'cleaning',
-            priority: 'medium' as any,
-            description: '建议清理光伏板表面的树叶遮挡，以提高发电效率',
-            estimatedCost: 200,
-            estimatedTime: '2-4小时',
-          },
-          {
-            type: 'cleaning',
-            priority: 'medium' as any,
-            description: '建议清洁光伏板表面的灰尘，定期维护可提高发电效率15-20%',
-            estimatedCost: 150,
-            estimatedTime: '1-2小时',
-          },
-        ],
-        createdAt: new Date(),
-      };
+      const navState = location.state as {
+        analysisData?: AnalysisResult;
+        imageUrl?: string;
+      } | null;
 
-      setAnalysisResult(mockResult);
-      setImageUrl(`/uploads/${imageId}.jpg`); // 模拟图片URL
-      
+      if (navState?.analysisData) {
+        const data = navState.analysisData;
+        setAnalysisResult({
+          ...data,
+          createdAt: new Date(data.createdAt),
+        });
+        setImageUrl(navState.imageUrl || '');
+      } else {
+        const response = await analysisService.analyzeImage(imageId);
+        setAnalysisResult({
+          imageId,
+          results: response.results,
+          summary: response.summary,
+          recommendations: response.recommendations,
+          createdAt: new Date(),
+        });
+        setImageUrl(`/uploads/${imageId}.jpg`);
+      }
     } catch (error) {
       console.error('加载分析结果失败:', error);
       const apiError = error as ApiError;
@@ -348,4 +317,5 @@ export const ResultsPage: React.FC = () => {
     </div>
   );
 };
+
 

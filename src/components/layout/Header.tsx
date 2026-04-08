@@ -8,6 +8,7 @@ import {
   Upload, 
   BarChart3, 
   PlayCircle,
+  Image as ImageIcon,
   Sun,
   Moon,
   Monitor
@@ -22,6 +23,7 @@ export const Header: React.FC = () => {
   const navigation = [
     { name: '首页', href: '/', icon: Zap },
     { name: '上传分析', href: '/upload', icon: Upload },
+    { name: '图片库', href: '/gallery', icon: ImageIcon },
     { name: '演示', href: '/demo', icon: PlayCircle },
   ];
 

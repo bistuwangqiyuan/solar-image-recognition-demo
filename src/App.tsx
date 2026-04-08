@@ -8,6 +8,7 @@ import { HomePage } from '@/pages/HomePage';
 import { UploadPage } from '@/pages/UploadPage';
 import { ResultsPage } from '@/pages/ResultsPage';
 import { DemoPage } from '@/pages/DemoPage';
+import { GalleryPage } from '@/pages/GalleryPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { AIModelProvider } from '@/contexts/AIModelContext';
@@ -38,6 +39,7 @@ function App() {
                 <Route path="/upload" element={<UploadPage />} />
                 <Route path="/results/:imageId" element={<ResultsPage />} />
                 <Route path="/demo" element={<DemoPage />} />
+                <Route path="/gallery" element={<GalleryPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>

@@ -297,3 +297,4 @@ export const DetectionResults: React.FC<DetectionResultsProps> = ({ results }) =
   );
 };
 
+

@@ -5,7 +5,7 @@
 /* 基础样式重置和全局样式 */
 @layer base {
   * {
-    @apply border-border;
+    @apply border-secondary-200;
   }
   
   body {
@@ -185,12 +185,12 @@
   }
   
   /* 阴影效果 */
-  .shadow-glow {
-    @apply shadow-glow;
+  .shadow-glow-effect {
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
   }
   
-  .shadow-glow-lg {
-    @apply shadow-glow-lg;
+  .shadow-glow-lg-effect {
+    box-shadow: 0 0 40px rgba(14, 165, 233, 0.4);
   }
 }
 
@@ -322,4 +322,5 @@
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
+
 

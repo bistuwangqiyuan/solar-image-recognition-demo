@@ -89,13 +89,13 @@ export const DemoCard: React.FC<DemoCardProps> = ({
             {/* 左侧：图像和描述 */}
             <div className="space-y-4">
               {/* 图像预览 */}
-              <div className="aspect-video bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-3xl">🔋</span>
-                  </div>
-                  <p className="text-secondary-600">演示图像预览</p>
-                </div>
+              <div className="aspect-video bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-lg overflow-hidden">
+                <img
+                  src={demo.imageUrl}
+                  alt={demo.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
 
               {/* 描述 */}
@@ -249,4 +249,5 @@ export const DemoCard: React.FC<DemoCardProps> = ({
     </motion.div>
   );
 };
+
 

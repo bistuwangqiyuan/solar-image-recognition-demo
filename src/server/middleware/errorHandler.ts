@@ -132,3 +132,4 @@ export const createNetworkError = (message: string, details?: any) => {
   return new AppError(message, 503, ErrorType.NETWORK_ERROR, true, details);
 };
 
+
