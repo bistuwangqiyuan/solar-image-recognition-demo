@@ -185,7 +185,7 @@ export const AutoPipelineDemo: React.FC = () => {
                   全流程自动演示
                 </h2>
                 <p className="text-sm text-secondary-500">
-                  一键运行 &middot; MobileNet V2 实时推理 &middot; 6 张真实光伏板图像
+                  一键运行 &middot; 多模型 Vision API (Groq/Mistral/智谱) &middot; 6 张真实光伏板图像
                 </p>
               </div>
             </div>
@@ -241,10 +241,10 @@ export const AutoPipelineDemo: React.FC = () => {
           {isRunning && (
             <div className="mt-4">
               <div className="flex items-center justify-between text-xs text-secondary-500 mb-1">
-                <span>
-                  {phase === 'init-model'
-                    ? '加载 MobileNet V2 模型...'
-                    : `分析中 ${currentIndex + 1} / ${analyses.length}`}
+                    <span>
+                      {phase === 'init-model'
+                        ? '连接 Vision API...'
+                        : `分析中 ${currentIndex + 1} / ${analyses.length}`}
                 </span>
                 <span>
                   {phase === 'init-model'
@@ -283,7 +283,7 @@ export const AutoPipelineDemo: React.FC = () => {
                 {/* Phase 1: model loading */}
                 <StepIndicator
                   icon={<Brain className="w-4 h-4" />}
-                  label="加载 MobileNet V2 预训练模型"
+                  label="连接 Vision API 分析引擎"
                   status={
                     phase === 'init-model'
                       ? 'running'
@@ -388,7 +388,7 @@ export const AutoPipelineDemo: React.FC = () => {
                       </span>
                       <span className="flex items-center space-x-1">
                         <Cpu className="w-3.5 h-3.5" />
-                        <span>MobileNet V2 + KNN 分类器</span>
+                        <span>Vision API 分析引擎</span>
                       </span>
                     </div>
                   </motion.div>
@@ -508,7 +508,7 @@ const ImageStepCard: React.FC<{
               <span>
                 {status === 'loading-image'
                   ? '加载图片中...'
-                  : 'MobileNet V2 推理中...'}
+                  : 'Vision API 分析中...'}
               </span>
             </div>
           )}

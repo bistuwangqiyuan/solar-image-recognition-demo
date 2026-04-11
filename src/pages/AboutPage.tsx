@@ -20,17 +20,17 @@ export const AboutPage: React.FC = () => {
     {
       icon: Brain,
       title: 'AI 智能识别',
-      desc: '基于 MobileNet V2 + KNN 分类器，在浏览器端实时完成光伏板状态检测。',
+      desc: '基于 Groq / Mistral / 智谱 多模型 Vision API，自动切换可用引擎精准识别光伏板故障。',
     },
     {
       icon: Target,
       title: '多类别检测',
-      desc: '支持正常、树叶遮挡、灰尘覆盖、阴影遮挡、异常情况等 5 大类别。',
+      desc: '支持正常、树叶遮挡、灰尘覆盖、阴影遮挡、裂缝、热斑、腐蚀等 8 大类别。',
     },
     {
       icon: Cpu,
-      title: '纯前端推理',
-      desc: '使用 TensorFlow.js 在客户端运行模型，无需上传图片到服务器，保护隐私。',
+      title: '三级降级方案',
+      desc: 'Vision API → Python CV → 浏览器离线分析，确保任何网络环境下都能使用。',
     },
     {
       icon: Shield,
@@ -40,9 +40,9 @@ export const AboutPage: React.FC = () => {
   ];
 
   const techStack = [
-    'React 18', 'TypeScript', 'Vite', 'TensorFlow.js',
-    'MobileNet V2', 'KNN Classifier', 'Tailwind CSS',
-    'Framer Motion', 'React Router', 'Express',
+    'React 18', 'TypeScript', 'Vite', 'Vercel AI SDK',
+    'Groq (Llama 4)', 'Mistral (Pixtral)', '智谱 (GLM-4V)',
+    'Python FastAPI', 'Tailwind CSS', 'Framer Motion', 'Vercel Serverless',
   ];
 
   return (
@@ -161,7 +161,7 @@ export const AboutPage: React.FC = () => {
                 <Users className="w-10 h-10 text-primary-600" />
                 <div className="text-left">
                   <h3 className="font-semibold text-secondary-900">Solar Image Recognition Team</h3>
-                  <p className="text-sm text-secondary-500">基于 React + TypeScript + TensorFlow.js 构建</p>
+                  <p className="text-sm text-secondary-500">基于 React + Vercel AI SDK + Vision API 构建</p>
                 </div>
               </div>
             </div>

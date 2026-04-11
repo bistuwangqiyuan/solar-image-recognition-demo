@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -19,26 +18,29 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
     },
   },
   build: {
-    outDir: 'dist/client',
+    outDir: 'dist',
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          tensorflow: ['@tensorflow/tfjs'],
-          ui: ['framer-motion', 'lucide-react'],
+        manualChunks(id: string) {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
+            return 'vendor'
+          }
+          if (id.includes('node_modules/framer-motion') || id.includes('node_modules/lucide-react')) {
+            return 'ui'
+          }
         },
       },
     },
   },
   optimizeDeps: {
-    include: ['@tensorflow/tfjs'],
+    exclude: ['ai', '@ai-sdk/google', '@ai-sdk/openai'],
   },
 })
 

@@ -74,7 +74,7 @@ export const DemoPage: React.FC = () => {
   const runDemo = async (demo: DemoData) => {
     try {
       setIsLoading(true);
-      toast('正在使用 MobileNet V2 分析图像...', { icon: '🧠' });
+      toast('正在使用 Vision API 分析图像...', { icon: '🧠' });
 
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -141,7 +141,7 @@ export const DemoPage: React.FC = () => {
               AI识别演示
             </h1>
             <p className="text-xl text-secondary-600 max-w-2xl mx-auto">
-              体验我们的AI光伏板识别技术，查看各种场景下的检测效果
+              基于多模型 Vision API (Groq/Mistral/智谱) 的光伏板故障识别，查看各种场景下的检测效果
             </p>
           </div>
 
@@ -194,7 +194,7 @@ export const DemoPage: React.FC = () => {
                   <Zap className="w-6 h-6 text-info-600" />
                 </div>
                 <div className="text-2xl font-bold text-secondary-900 mb-1">
-                  5
+                  8
                 </div>
                 <div className="text-sm text-secondary-600">检测类别</div>
               </div>
@@ -455,10 +455,10 @@ export const DemoPage: React.FC = () => {
                     <div>
                       <div className="flex items-center space-x-2 mb-3">
                         <h3 className="text-lg font-semibold text-secondary-900">
-                          AI 实时检测结果
+                          Vision API 检测结果
                         </h3>
                         <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full font-medium">
-                          MobileNet V2
+                          Groq / Mistral / 智谱
                         </span>
                       </div>
                       <div className="space-y-2">

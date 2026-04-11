@@ -1,5 +1,3 @@
-import * as tf from '@tensorflow/tfjs';
-
 // 图像处理工具类
 export class ImageProcessor {
   /**

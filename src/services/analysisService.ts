@@ -7,7 +7,6 @@ import {
   ErrorType 
 } from '@/types';
 import { aiModelService } from './aiModelService';
-import { ImageProcessor } from '@/utils/imageProcessor';
 
 class AnalysisService {
   private baseURL = '/api';
@@ -17,58 +16,27 @@ class AnalysisService {
    */
   async analyzeImageWithClientAI(
     imageElement: HTMLImageElement,
-    options?: {
+    _options?: {
       confidence?: number;
       detailLevel?: 'basic' | 'detailed';
     }
   ): Promise<AnalysisResponse> {
     try {
-      console.log('开始客户端AI分析...');
-      
-      // 初始化AI模型
-      await aiModelService.initializeModel();
-      
-      // 图像预处理
-      const enhancedImage = ImageProcessor.enhanceImage(imageElement);
-      
-      // 创建新的图像元素用于分析
-      const analysisImage = new Image();
-      analysisImage.src = ImageProcessor.canvasToDataURL(enhancedImage);
-      
-      return new Promise((resolve, reject) => {
-        analysisImage.onload = async () => {
-          try {
-            // 使用AI模型分析
-            const results = await aiModelService.analyzeImage(analysisImage);
-            
-            // 生成建议
-            const recommendations = this.generateRecommendations(results);
-            
-            // 计算摘要
-            const summary = this.calculateSummary(results, 0);
-            
-            const analysisResponse: AnalysisResponse = {
-              results,
-              summary,
-              recommendations,
-              processingTime: Date.now(),
-            };
-            
-            resolve(analysisResponse);
-          } catch (error) {
-            reject(error);
-          }
-        };
-        
-        analysisImage.onerror = () => {
-          reject(new Error('图像加载失败'));
-        };
-      });
+      console.log('开始 Vision API 图像分析...');
+
+      const startTime = performance.now();
+      const results = await aiModelService.analyzeImage(imageElement);
+      const elapsed = Math.round(performance.now() - startTime);
+
+      const recommendations = this.generateRecommendations(results);
+      const summary = this.calculateSummary(results, elapsed);
+
+      return { results, summary, recommendations, processingTime: elapsed };
     } catch (error) {
-      console.error('客户端AI分析失败:', error);
+      console.error('AI分析失败:', error);
       throw {
         type: ErrorType.AI_PROCESSING_ERROR,
-        message: '客户端AI分析失败',
+        message: 'AI分析失败',
         retryable: true,
       } as ApiError;
     }

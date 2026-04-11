@@ -133,7 +133,7 @@ export const AIModelStatusIndicator: React.FC = () => {
     return (
       <div className="flex items-center space-x-2 text-primary-600">
         <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-sm">AI模型加载中...</span>
+        <span className="text-sm">Vision API 连接中...</span>
       </div>
     );
   }
@@ -142,7 +142,7 @@ export const AIModelStatusIndicator: React.FC = () => {
     return (
       <div className="flex items-center space-x-2 text-error-600">
         <div className="w-4 h-4 bg-error-600 rounded-full"></div>
-        <span className="text-sm">AI模型加载失败</span>
+        <span className="text-sm">Vision API 连接失败</span>
       </div>
     );
   }
@@ -151,7 +151,7 @@ export const AIModelStatusIndicator: React.FC = () => {
     return (
       <div className="flex items-center space-x-2 text-success-600">
         <div className="w-4 h-4 bg-success-600 rounded-full"></div>
-        <span className="text-sm">AI模型已就绪</span>
+        <span className="text-sm">Vision API 已就绪</span>
       </div>
     );
   }
@@ -159,7 +159,7 @@ export const AIModelStatusIndicator: React.FC = () => {
   return (
     <div className="flex items-center space-x-2 text-secondary-500">
       <div className="w-4 h-4 bg-secondary-400 rounded-full"></div>
-      <span className="text-sm">AI模型未初始化</span>
+        <span className="text-sm">Vision API 未初始化</span>
     </div>
   );
 };

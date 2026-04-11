@@ -195,8 +195,8 @@ export const Footer: React.FC = () => {
         <div className="border-t border-secondary-700 py-4">
           <div className="text-center text-sm text-secondary-500">
             <p>
-              基于 React + TypeScript + TensorFlow.js 构建 | 
-              版本 1.0.0 | 
+              基于 React + Vercel AI SDK + Vision API 构建 | 
+              版本 3.0.0 | 
               最后更新: {new Date().toLocaleDateString('zh-CN')}
             </p>
           </div>
